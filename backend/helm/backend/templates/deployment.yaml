@@ -1,0 +1,80 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    run: backend
+spec:
+  replicas: {{ .Values.replicaCount }}
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+        app.kubernetes.io/name: {{ .Values.keptn.service }}
+        app.kubernetes.io/instance: "{{ .Values.keptn.service }}-{{ .Values.keptn.deployment }}"
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: "{{ .Values.keptn.project }}"
+        app.kubernetes.io/managed-by: Keptn
+    spec:
+      imagePullSecrets:
+        - name: docker-registry
+
+      containers:
+        - name: backend
+          image: "{{ .Values.image }}"
+          imagePullPolicy: IfNotPresent
+          volumeMounts:
+            - mountPath: /usr/local/tomcat/webapps/
+              name: app-volume
+            - mountPath: /root/.aws
+              name: root-volume
+          ports:
+            - name: http
+              containerPort: 8080
+              hostPort: 8080
+          env:
+            - name: JAVA_OPTS
+              value: "-DRDS_URL=jdbc:mysql://mysql.{{ .Values.keptn.project }}-{{ .Values.keptn.stage }}:3306/test"
+            - name: DT_CUSTOM_PROP
+              value: "keptn_project={{ .Values.keptn.project }} keptn_service={{ .Values.keptn.service }} keptn_stage={{ .Values.keptn.stage }} keptn_deployment={{ .Values.keptn.deployment }}"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: "metadata.name"
+            - name: DEPLOYMENT_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: "metadata.labels['deployment']"
+            - name: CONTAINER_IMAGE
+              value: "{{ .Values.image }}"
+            - name: KEPTN_PROJECT
+              value: "{{ .Chart.Name }}"
+            - name: KEPTN_STAGE
+              valueFrom:
+                fieldRef:
+                  fieldPath: "metadata.namespace"
+            - name: KEPTN_SERVICE
+              value: "{{ .Chart.Name }}"
+            - name: UNLEASH_SERVER_URL
+              value: "http://unleash.unleash-{{ .Values.keptn.stage }}/api"
+
+          resources:
+            limits:
+              cpu: 1000m
+              memory: 2048Mi
+            requests:
+              cpu: 500m
+              memory: 1024Mi
+      volumes:
+        - name: app-volume
+          emptyDir: {}
+        - name: root-volume
+          emptyDir: {}
