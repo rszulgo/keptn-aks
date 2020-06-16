@@ -1,3 +1,5 @@
+backend:
+  enabled: false
 mysql:
   enabled: false
 mysql-generated:
