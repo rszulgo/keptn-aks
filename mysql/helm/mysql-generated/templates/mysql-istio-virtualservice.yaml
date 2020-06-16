@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  creationTimestamp: null
+  name: mysql
+spec:
+  gateways:
+  - public-gateway.istio-system
+  - mesh
+  hosts:
+  - mysql.mission-control-production.52.224.90.111.xip.io
+  - mysql
+  http:
+  - route:
+    - destination:
+        host: mysql.mission-control-production.svc.cluster.local
