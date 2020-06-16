@@ -1,9 +1,5 @@
-  # Default values for mcui.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-
-replicaCount: 1
 image: mysql:5.6
+replicaCount: 1
 service:
-  port: 3306
   name: mysql-service
+  port: 3306
