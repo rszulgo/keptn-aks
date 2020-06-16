@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    run: backend
+  name: backend-primary
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-primary
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: backend-primary
+        app.kubernetes.io/component: api
+        app.kubernetes.io/instance: backend-canary
+        app.kubernetes.io/managed-by: Keptn
+        app.kubernetes.io/name: backend-primary
+        app.kubernetes.io/part-of: mission-control
+    spec:
+      containers:
+      - env:
+        - name: JAVA_OPTS
+          value: -DRDS_URL=jdbc:mysql://mysql.mission-control-staging:3306/test
+        - name: DT_CUSTOM_PROP
+          value: keptn_project=mission-control keptn_service=backend keptn_stage=staging
+            keptn_deployment=primary
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: DEPLOYMENT_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['deployment']
+        - name: CONTAINER_IMAGE
+          value: tomcat:8.5.51-jdk8-adoptopenjdk-hotspot
+        - name: KEPTN_PROJECT
+          value: backend2
+        - name: KEPTN_STAGE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: KEPTN_SERVICE
+          value: backend2
+        - name: UNLEASH_SERVER_URL
+          value: http://unleash.unleash-staging/api
+        image: tomcat:8.5.51-jdk8-adoptopenjdk-hotspot
+        imagePullPolicy: IfNotPresent
+        name: backend
+        ports:
+        - containerPort: 8080
+          hostPort: 8080
+          name: http
+        resources:
+          limits:
+            cpu: "1"
+            memory: 2Gi
+          requests:
+            cpu: 500m
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: /usr/local/tomcat/webapps/
+          name: app-volume
+        - mountPath: /root/.aws
+          name: root-volume
+      imagePullSecrets:
+      - name: docker-registry
+      volumes:
+      - emptyDir: {}
+        name: app-volume
+      - emptyDir: {}
+        name: root-volume
+status: {}

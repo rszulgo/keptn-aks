@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  creationTimestamp: null
+  name: backend
+spec:
+  gateways:
+  - public-gateway.istio-system
+  - mesh
+  hosts:
+  - backend.mission-control-staging.52.224.90.111.xip.io
+  - backend
+  http:
+  - route:
+    - destination:
+        host: backend-canary.mission-control-staging.svc.cluster.local
+    - destination:
+        host: backend-primary.mission-control-staging.svc.cluster.local
+      weight: 100
